@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+@layer base {
+  * { box-sizing: border-box; }
+  html, body, #root { min-height: 100%; }
+  body { margin: 0; min-width: 320px; overflow-x: hidden; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  button, input, select { font: inherit; }
+  select { color-scheme: dark; }
+  select option { background: #0f0f23; color: #f8fafc; }
+}
+
+/* Logo gradients — outside @layer so they are not overridden by Tailwind utilities. */
+.logo-part {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Web-only atmosphere and motion from compress20.html — desktop (Tauri) stays unchanged.
+   Kept outside @layer so these rules beat utility classes on the same elements. */
+.web-skin {
+  background: #0f0f23;
+  isolation: isolate;
+}
+
+/* Same element as compress20.html `.bg-gradient` — web only via conditional render. */
+.web-skin .bg-gradient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+  animation: web-bg-pulse 8s ease-in-out infinite;
+}
+
+.web-skin .logo-mag {
+  background-image: linear-gradient(135deg, #60a5fa, #3b82f6);
+}
+
+.web-skin header {
+  animation: web-fade-in-down 0.8s ease;
+}
+
+.web-skin .upload-zone {
+  backdrop-filter: blur(20px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.web-skin .upload-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.web-skin .upload-zone:hover {
+  border-color: #6366f1;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px rgba(99, 102, 241, 0.2);
+}
+
+.web-skin .upload-zone:hover::before {
+  opacity: 0.05;
+}
+
+.web-skin .upload-icon {
+  animation: web-float 3s ease-in-out infinite;
+}
+
+.web-skin .surface-panel {
+  backdrop-filter: blur(20px);
+  animation: web-fade-in-up 0.6s ease;
+}
+
+.web-skin .preview-label,
+.web-skin .preview-stats {
+  backdrop-filter: blur(10px);
+}
+
+.web-skin .image-card {
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.web-skin .image-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.web-skin .image-card.is-processing {
+  animation: web-processing-pulse 2s ease-in-out infinite;
+}
+
+.web-skin .done-badge {
+  animation: web-check-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.web-skin .delete-btn {
+  transition: all 0.2s;
+}
+
+.web-skin .delete-btn:hover {
+  transform: scale(1.1) !important;
+  background: #ef4444;
+}
+
+.web-skin .action-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.web-skin .action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.web-skin .action-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.web-skin .action-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+}
+
+.web-skin .action-btn-primary {
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+}
+
+.web-skin .action-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 15px 40px rgba(99, 102, 241, 0.5);
+}
+
+.web-skin .folder-btn {
+  transition: all 0.3s;
+}
+
+.web-skin .folder-btn:hover {
+  transform: translateY(-2px);
+}
+
+.web-skin .quality-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  accent-color: transparent;
+}
+
+.web-skin .quality-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.web-skin .quality-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.web-skin .quality-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.web-skin .quality-range::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+.web-skin .quality-range::-moz-range-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.web-skin .progress-fill {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.web-skin .progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: web-shimmer 2s infinite;
+}
+
+.web-skin .progress-panel {
+  animation: web-fade-in 0.5s ease;
+}
+
+@keyframes web-bg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes web-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes web-fade-in-down {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes web-fade-in-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes web-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes web-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes web-processing-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+}
+
+@keyframes web-check-pop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .web-skin .bg-gradient,
+  .web-skin header,
+  .web-skin .upload-icon,
+  .web-skin .surface-panel,
+  .web-skin .progress-panel,
+  .web-skin .image-card.is-processing,
+  .web-skin .done-badge,
+  .web-skin .progress-fill::after {
+    animation: none !important;
+  }
+
+  .web-skin .upload-zone,
+  .web-skin .image-card,
+  .web-skin .action-btn,
+  .web-skin .folder-btn,
+  .web-skin .delete-btn,
+  .web-skin .progress-fill,
+  .web-skin .quality-range::-webkit-slider-thumb,
+  .web-skin .quality-range::-moz-range-thumb {
+    transition: none !important;
+  }
+
+  .web-skin .upload-zone:hover,
+  .web-skin .image-card:hover,
+  .web-skin .action-btn:hover:not(:disabled),
+  .web-skin .folder-btn:hover,
+  .web-skin .delete-btn:hover,
+  .web-skin .quality-range::-webkit-slider-thumb:hover,
+  .web-skin .quality-range::-moz-range-thumb:hover {
+    transform: none !important;
+  }
+}

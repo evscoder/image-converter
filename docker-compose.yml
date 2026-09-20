@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+    ports:
+      - "${API_PORT:-3001}:3001"
+    volumes:
+      - ./server:/server
+      - /server/node_modules
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+      args:
+        APP_PORT: ${APP_PORT:-4200}
+    ports:
+      - "${VITE_PORT:-4200}:${APP_PORT:-4200}"
+    environment:
+      VITE_API_PROXY_TARGET: http://api:3001
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - api

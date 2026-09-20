@@ -1,0 +1,31 @@
+@mixin text-overflow() {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+@mixin text-ellipsis($rows: 1) {
+    display: -webkit-box;
+    display: -moz-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $rows;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+@mixin text-gradient($color, $bg) {
+    color: $color;
+    background: $bg;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+}
+
+@mixin scrollbar-invisible {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}

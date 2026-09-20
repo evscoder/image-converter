@@ -1,0 +1,42 @@
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+
+    &,
+    &::before,
+    &::after {
+        box-sizing: border-box;
+    }
+}
+
+html,
+body {
+    -webkit-overflow-scrolling: touch;
+}
+
+html {
+    font-size: var(--font-size-base);
+}
+
+body {
+    display: grid;
+    grid-template-columns: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    font-size: 1rem;
+    font-family: var(--font-family-default);
+    font-feature-settings: var(--font-feature, normal);
+    font-variant: normal;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    background-repeat: repeat;
+    background-position: 50% 0;
+    background-size: cover;
+}
+
+#root {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 100%;
+}
