@@ -1,0 +1,63 @@
+@use "sass:map";
+
+// Media query helper.
+// Breakpoints are stored as named values and can be reused anywhere in SCSS:
+
+$breakpoints: (
+    'xs': 374px,
+    'sm': 576px,
+    'md': 768px,
+    'lg': 1024px,
+    'xl': 1200px,
+    '2xl': 1366px,
+    'hd': 1920px,
+    '2k': 2560px,
+    '4k': 3840px,
+);
+
+$media-expressions: (
+    'screen': 'screen',
+    'print': 'print',
+    'handheld': 'handheld',
+    'landscape': '(orientation: landscape)',
+    'portrait': '(orientation: portrait)',
+    'retina2x': '(-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi), (min-resolution: 2dppx)',
+    'retina3x': '(-webkit-min-device-pixel-ratio: 3), (min-resolution: 350dpi), (min-resolution: 3dppx)',
+) !default;
+
+// Common usage:
+//
+// .card {
+//     padding: 16px;
+//
+//     @media and screen (width >= bp('md')) {
+//        padding: 24px;
+//     }
+// }
+@function bp($key) {
+    @if map.has-key($breakpoints, $key) {
+        @return map.get($breakpoints, $key);
+    } @else {
+        @error "Breakpoint `#{$key}` was not found in $breakpoints";
+    }
+}
+
+// Includes a named media expression from $media-expressions.
+//
+// Example:
+//
+// .layout {
+//     @include respond-to('landscape') {
+//         grid-template-columns: repeat(2, 1fr);
+//     }
+// }
+@mixin respond-to($bp) {
+    @if map.has-key($media-expressions, $bp) {
+        @media #{inspect(map.get($media-expressions, $bp))} {
+            @content;
+        }
+    } @else {
+        @error "Media expression `#{$bp}` was not found in $media-expressions";
+    }
+}
+

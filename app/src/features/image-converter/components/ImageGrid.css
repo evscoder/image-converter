@@ -1,0 +1,59 @@
+.image-gallery {
+  --image-card-size: 176px;
+  min-width: 0;
+}
+
+.image-gallery-add {
+  margin-bottom: 14px;
+  padding: 4px 8px;
+  margin-right: auto;
+  margin-left: -8px;
+}
+
+.image-gallery-add-icon {
+  border: 1px solid rgb(196 181 253 / 42%);
+  background: rgb(139 92 246 / 18%);
+  box-shadow: 0 5px 16px rgb(76 29 149 / 20%);
+}
+
+.image-gallery-scroll {
+  min-width: 0;
+  flex: 1;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #8b5cf6 #ffffff0d;
+  border-radius: 12px;
+}
+
+.image-gallery-scroll:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+
+.image-gallery-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, var(--image-card-size));
+  grid-auto-columns: var(--image-card-size);
+  gap: 12px;
+  width: max-content;
+  min-width: 100%;
+  padding-bottom: 8px;
+}
+
+.image-gallery-grid-single {
+  grid-template-rows: var(--image-card-size);
+}
+
+.web-skin .image-gallery .image-card:hover {
+  transform: none;
+  box-shadow: inset 0 0 0 1px #818cf8;
+}
+
+@media (max-width: 640px) {
+  .image-gallery-grid {
+    grid-template-rows: var(--image-card-size);
+    gap: 10px;
+  }
+}
