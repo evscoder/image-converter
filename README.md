@@ -163,9 +163,10 @@ Use `npm run test:watch` or `npm run test:e2e:ui` for interactive runs.
 
 ## Release workflow
 
-The [desktop build workflow](.github/workflows/build.yml) builds Ubuntu and
-Windows and macOS installers. Pushes to `main` and manual runs save downloadable Actions
-artifacts. A version tag publishes a GitHub Release after all three builds succeed.
+The [desktop build workflow](.github/workflows/build.yml) builds Ubuntu, Windows,
+and macOS installers when a version tag (`v*`) is pushed. A GitHub Release is
+published after all three builds succeed. Pushes to `main` do not trigger this
+workflow. Manual runs from a branch save downloadable Actions artifacts.
 
 ```bash
 git tag v1.0.5
@@ -180,7 +181,7 @@ the release. The workflow uses the built-in `GITHUB_TOKEN`.
 <details>
 <summary><strong>Build numbering and reruns</strong></summary>
 
-For `main` pushes and manual runs, the workflow run number is added to the patch
+For manual runs from a branch, the workflow run number is added to the patch
 version in `src-tauri/tauri.conf.json`. A base version of `1.0.4` and run number
 12 produce `1.0.16`. All platforms use the same version. Failed runs also
 consume run numbers; rerunning the same run keeps its version.
