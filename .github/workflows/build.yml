@@ -117,11 +117,20 @@ jobs:
             fi
           done
 
+          release_notes=(--generate-notes)
+          if [ "$(git cat-file -t "refs/tags/$RELEASE_TAG")" = tag ]; then
+            notes_file="$RUNNER_TEMP/release-notes.md"
+            git for-each-ref --format='%(contents)' "refs/tags/$RELEASE_TAG" > "$notes_file"
+            if [ -s "$notes_file" ]; then
+              release_notes=(--notes-file "$notes_file")
+            fi
+          fi
+
           if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${installers[@]}" --clobber
           else
             gh release create "$RELEASE_TAG" "${installers[@]}" \
               --verify-tag \
               --title "Image Converter ${RELEASE_TAG}" \
-              --notes-from-tag
+              "${release_notes[@]}"
           fi
