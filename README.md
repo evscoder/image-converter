@@ -169,14 +169,15 @@ published after all three builds succeed. Pushes to `main` do not trigger this
 workflow. Manual runs from a branch save downloadable Actions artifacts.
 
 ```bash
-git tag v1.0.5
-git push origin v1.0.5
+git tag -a v1.0.7 -m "Summarize the interface changes in this release"
+git push origin v1.0.7
 ```
 
-Use a new `vMAJOR.MINOR.PATCH` tag for each release. The tag determines the exact
-installer version; it does not need to match `tauri.conf.json`. Release notes
-are generated automatically, and the five installer formats are attached to
-the release. The workflow uses the built-in `GITHUB_TOKEN`.
+Use a new annotated `vMAJOR.MINOR.PATCH` tag for each release. Put a short
+changelog in the tag message; it becomes the GitHub Release description.
+The tag determines the exact installer version; it does not need to match
+`tauri.conf.json`. The five installer formats are attached to the release.
+The workflow uses the built-in `GITHUB_TOKEN`.
 
 <details>
 <summary><strong>Build numbering and reruns</strong></summary>

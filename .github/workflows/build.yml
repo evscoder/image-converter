@@ -118,5 +118,5 @@ jobs:
             gh release create "$RELEASE_TAG" "${installers[@]}" \
               --verify-tag \
               --title "Image Converter ${RELEASE_TAG}" \
-              --generate-notes
+              --notes-from-tag
           fi
