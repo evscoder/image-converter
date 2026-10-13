@@ -28,7 +28,7 @@ Drop in your images. Choose a format, tune the quality, and check the preview.
 Export the whole batch to a folder or download it as a ZIP.
 Image processing happens locally on your machine.
 
-![Image Converter workspace with four demonstration images and export controls](docs/images/workspace.png)
+![Image Converter workspace with twelve demonstration images, horizontal thumbnail scrolling, and the full export sidebar](docs/images/workspace.png)
 
 *The current interface uses Russian labels. The preview above uses demonstration artwork.*
 
