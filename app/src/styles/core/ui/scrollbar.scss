@@ -1,0 +1,32 @@
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track);
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-corner {
+    background: var(--color-scrollbar-track);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid var(--color-scrollbar-track);
+    border-radius: 8px;
+    background: var(--gradient-action);
+
+    &:hover {
+      background: var(--color-scrollbar-hover);
+    }
+  }
+}
+
+.invisible-scroll {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,0 +1,71 @@
+@use '../../plugins/media' as *;
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background: #303238;
+  color: #e4e4e7;
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    background 150ms,
+    border-color 150ms;
+
+  @media (width < bp('xl')) {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.15);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  &--primary {
+    border-color: #527e80;
+    background: var(--gradient-action);
+    color: #fff;
+    box-shadow: 0 4px 12px #26bbab26;
+  }
+
+  &--folder {
+    gap: 8px;
+    padding: 10px 20px;
+    color: var(--color-text);
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: #404040;
+      filter: none;
+    }
+  }
+
+  &--format {
+    padding: 8px 6px;
+    border-color: #3f3f46;
+    border-radius: 7px;
+    background: #18181b;
+    color: #a1a1aa;
+    font-size: 11px;
+  }
+
+  &--format-active {
+    border-color: transparent;
+    background: linear-gradient(to bottom right, #009689, #0075a5);
+    color: #fff;
+  }
+}

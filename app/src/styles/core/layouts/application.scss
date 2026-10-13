@@ -1,0 +1,55 @@
+.converter-workspace {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+  }
+
+  &__workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 378px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  &__canvas,
+  &__sidebar {
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  &__sidebar {
+    padding-left: 0;
+  }
+
+  @media (width <= 1200px) {
+    &__workspace {
+      display: block;
+      padding: 20px;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+    }
+
+    &__canvas,
+    &__sidebar {
+      padding: 0;
+      overflow: visible;
+    }
+
+    &__sidebar {
+      margin-bottom: 20px;
+    }
+  }
+
+  @media (width <= 761px) {
+    &__workspace {
+      padding: 14px;
+    }
+  }
+}

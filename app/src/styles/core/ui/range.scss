@@ -1,0 +1,11 @@
+@use '../../plugins/media' as *;
+
+.ui-range {
+  min-width: 0;
+  width: 100%;
+  accent-color: #5699e2;
+
+  @media (width < bp('xl')) {
+    min-height: 32px;
+  }
+}

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="440" viewBox="0 0 1280 440" fill="none">
+  <title>Image Converter — Less weight. Same vision.</title>
+  <desc>Offline batch conversion for Ubuntu and Windows. WebP, JPEG and PNG.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1280" y2="440" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#193b3d"/>
+      <stop offset="0.55" stop-color="#19282f"/>
+      <stop offset="1" stop-color="#172335"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="830" y1="95" x2="1150" y2="355" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a6eed5"/>
+      <stop offset="1" stop-color="#78baff"/>
+    </linearGradient>
+    <linearGradient id="image" x1="925" y1="145" x2="1075" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#397568"/>
+      <stop offset="1" stop-color="#355e7b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="440" rx="24" fill="url(#background)"/>
+  <rect x="1" y="1" width="1278" height="438" rx="23" stroke="#527e80" stroke-opacity="0.45"/>
+  <g stroke="#8bd9d0" stroke-opacity="0.06">
+    <path d="M800 0v440M880 0v440M960 0v440M1040 0v440M1120 0v440M1200 0v440"/>
+    <path d="M760 60h520M760 140h520M760 220h520M760 300h520M760 380h520"/>
+  </g>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <text x="66" y="77" fill="#a6eed5" font-size="14" font-weight="600" letter-spacing="3">IMAGE CONVERTER</text>
+    <text x="62" y="158" fill="#f0f7f6" font-size="64" font-weight="700" letter-spacing="-2">Less weight.</text>
+    <text x="62" y="231" fill="#a6eed5" font-size="64" font-weight="700" letter-spacing="-2">Same vision.</text>
+    <text x="66" y="282" fill="#b4c9ce" font-size="20">Batch convert, resize, and export. All on your desktop.</text>
+    <rect x="66" y="325" width="216" height="40" rx="20" fill="#a6eed5" fill-opacity="0.08" stroke="#527e80"/>
+    <text x="87" y="351" fill="#c8e7df" font-size="13" letter-spacing="1">WEBP / JPEG / PNG</text>
+    <text x="307" y="351" fill="#9bb2bf" font-size="14">OFFLINE · UBUNTU + WINDOWS</text>
+    <text x="66" y="403" fill="#789399" font-size="12" letter-spacing="1.5">YOUR IMAGES. YOUR MACHINE. YOUR WORKFLOW.</text>
+  </g>
+  <g transform="rotate(-9 1000 220)">
+    <rect x="881" y="100" width="224" height="246" rx="22" fill="#1b333f" stroke="#476e7b" stroke-width="2"/>
+  </g>
+  <g transform="rotate(7 1000 220)">
+    <rect x="903" y="107" width="224" height="246" rx="22" fill="#24434a" stroke="#527e80" stroke-width="2"/>
+  </g>
+  <rect x="900" y="99" width="224" height="246" rx="22" fill="#1b3038" stroke="url(#accent)" stroke-width="2"/>
+  <rect x="918" y="117" width="188" height="174" rx="12" fill="url(#image)"/>
+  <circle cx="1057" cy="157" r="19" fill="#c1efdc"/>
+  <path d="m918 264 61-79 52 61 30-36 45 54v27H918Z" fill="#8cbfac"/>
+  <path d="m918 281 48-42 55 40 41-36 44 39v9H918Z" fill="#447574"/>
+  <g stroke="url(#accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M850 167a165 165 0 0 1 243-82m-2-17 6 20-21 3"/>
+    <path d="M1173 280a165 165 0 0 1-243 82m2 17-6-20 21-3"/>
+  </g>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600">
+    <text x="919" y="322" fill="#c8e7df">READY TO EXPORT</text>
+    <circle cx="1089" cy="317" r="11" fill="#488676"/>
+    <path d="m1084 317 3 3 6-7" stroke="#d6eee7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

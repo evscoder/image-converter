@@ -1,0 +1,23 @@
+@use '../../plugins/media' as *;
+
+.ui-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: #e4e4e7;
+  font-size: 12px;
+  line-height: 20px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgb(20 184 166 / 20%);
+  }
+
+  @media (width < bp('xl')) {
+    min-height: 44px;
+    font-size: 14px;
+  }
+}

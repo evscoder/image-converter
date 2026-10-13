@@ -1,0 +1,124 @@
+name: Build desktop installers
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            bundles: deb,appimage
+            artifact: ubuntu-installers
+          - platform: windows-latest
+            bundles: nsis,msi
+            artifact: windows-installers
+          - platform: macos-latest
+            bundles: dmg
+            artifact: macos-installers
+            args: --target universal-apple-darwin
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install macOS Rust targets
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Set installer version
+        id: version
+        run: node scripts/set-build-version.mjs
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install JavaScript dependencies
+        run: |
+          npm ci
+          npm --prefix app ci
+
+      - name: Build installers
+        run: npm run tauri -- build --bundles ${{ matrix.bundles }} ${{ matrix.args }}
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-${{ steps.version.outputs.version }}
+          path: |
+            src-tauri/target/release/bundle/**
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*-installers-*'
+          path: installers
+          merge-multiple: true
+
+      - name: Publish installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -d '' installers < <(find installers -type f \( \
+            -name '*.deb' -o \
+            -name '*.AppImage' -o \
+            -name '*.msi' -o \
+            -name '*.dmg' -o \
+            -name '*-setup.exe' \
+          \) -print0)
+
+          for extension in deb AppImage msi exe dmg; do
+            if ! find installers -type f -name "*.${extension}" -print -quit | grep -q .; then
+              echo "Missing installer format: ${extension}" >&2
+              exit 1
+            fi
+          done
+
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${installers[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${installers[@]}" \
+              --verify-tag \
+              --title "Image Converter ${RELEASE_TAG}" \
+              --generate-notes
+          fi

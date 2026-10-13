@@ -1,0 +1,37 @@
+@use '../../plugins/media' as *;
+
+.ui-panel {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background-color: var(--color-surface);
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #bcc4d4;
+
+    &--inset {
+      margin: -20px -20px 20px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text);
+      background: var(--gradient-panel);
+
+      @media (width < bp('xl')) {
+        margin: -24px -24px 24px;
+        padding: 16px 24px;
+        font-size: 14px;
+      }
+
+      @media (width <= 760px) {
+        margin: -20px -20px 20px;
+        padding: 16px 20px;
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: temp
+      dockerfile: docker/server/Dockerfile
+    ports:
+      - "${API_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: production
+    command: sh -c "npm run build && npm start"
+
+  app:
+    build:
+      context: temp
+      dockerfile: docker/app/Dockerfile
+      args:
+        APP_PORT: ${APP_PORT:-4200}
+    ports:
+      - "${VITE_PORT:-4200}:${APP_PORT:-4200}"
+    environment:
+      NODE_ENV: production
+      VITE_API_PROXY_TARGET: http://api:3001
+    env_file:
+      - .env
+    depends_on:
+      - api

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="root-svg-symbols-element">
+    <symbol id="icon-keyboard-down" viewBox="0 0 22 22">
+        <path d="M7 8H15L11 13L7 8Z" />
+    </symbol>
+    <symbol id="icon-cross" viewBox="0 0 24 24">
+        <path d="M18.3644 19.7782L19.7786 18.364L13.4147 12L19.7786 5.63604L18.3644 4.22182L12.0004 10.5858L5.63648 4.22182L4.22227 5.63604L10.5862 12L4.22227 18.364L5.63648 19.7782L12.0004 13.4142L18.3644 19.7782Z"/>
+    </symbol>
+</svg>
