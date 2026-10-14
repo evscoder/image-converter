@@ -9,6 +9,8 @@ export interface ImageItem {
     thumbnailUrl: string;
     status: FileStatus;
     resultSize?: number;
+    width?: number;
+    height?: number;
 }
 
 export interface ProcessedImage {
@@ -35,4 +37,5 @@ export interface ConverterSettings {
     format: ImageFormat;
     quality: number;
     maxWidth: string;
+    scale: string;
 }

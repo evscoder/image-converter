@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useState, type ReactEventHandler } from 'react';
 import {
     ArrowDownRight,
     ArrowUpRight,
@@ -16,6 +17,7 @@ interface LivePreviewProps {
     format: ImageFormat;
     totalBytes: number;
     count: number;
+    forecastDeferred?: boolean;
 }
 
 export const LivePreview = ({
@@ -24,8 +26,13 @@ export const LivePreview = ({
     forecast,
     format,
     totalBytes,
-    count
+    count,
+    forecastDeferred = false
 }: LivePreviewProps) => {
+    const [dimensions, setDimensions] = useState<{ url: string; width: number; height: number } | null>(null);
+    const imageDimensions = dimensions?.url === first.previewUrl
+        ? `${dimensions.width} × ${dimensions.height}`
+        : '—';
     const resultSize = forecast?.resultSize ?? totalBytes;
     const savedSize = forecast?.savedSize ?? 0;
     const savedPercent = forecast && totalBytes ? (forecast.savedSize / totalBytes) * 100 : 0;
@@ -42,9 +49,6 @@ export const LivePreview = ({
                     <h2 className="flex items-center gap-[9px] text-[18px] font-semibold text-[#e1edef]">
                         <Eye size={18} className="shrink-0 text-[#79cbbf]" /> Предпросмотр сжатия
                     </h2>
-                    <p className="mt-2 truncate text-[15px] text-[#afb4bd]" title={first.file.name}>
-                        {first.file.name}
-                    </p>
                 </div>
                 <span
                     className={clsx(
@@ -56,9 +60,18 @@ export const LivePreview = ({
                 </span>
             </header>
 
-            <div className="image-preview__metadata flex flex-wrap gap-4 m-[12px_0_20px] text-[14px] text-[#969da8]">
-                <span>{first.file.type || 'Тип не определён'}</span>
-                <span>{formatBytes(first.file.size, 'KB')}</span>
+            <div
+                className={clsx(
+                    'image-preview__metadata flex items-center gap-3 m-[12px_0_20px]',
+                    'overflow-x-auto whitespace-nowrap text-[14px] text-[#969da8]'
+                )}
+            >
+                <span className="min-w-16 truncate text-[#afb4bd]" title={first.file.name}>
+                    {first.file.name}
+                </span>
+                <span className="shrink-0">{first.file.type || 'Тип не определён'}</span>
+                <span className="shrink-0">{formatBytes(first.file.size, 'KB')}</span>
+                <span className="shrink-0" aria-label="Размер изображения">{imageDimensions}</span>
             </div>
 
             <div
@@ -69,6 +82,14 @@ export const LivePreview = ({
             >
                 <PreviewPanel
                     imageUrl={first.previewUrl}
+                    onImageLoad={(event) => {
+                        const image = event.currentTarget;
+                        setDimensions({
+                            url: first.previewUrl,
+                            width: image.naturalWidth,
+                            height: image.naturalHeight
+                        });
+                    }}
                     label="Оригинал"
                     caption="Исходное изображение"
                     size={formatBytes(first.file.size, 'KB')}
@@ -84,18 +105,25 @@ export const LivePreview = ({
                 />
             </div>
 
-            <CompressionForecast
-                count={count}
-                resultSize={resultSize}
-                savedSize={savedSize}
-                savedPercent={savedPercent}
-            />
+            {forecastDeferred && !forecast ? (
+                <p className="mt-[18px] text-[14px] text-[#a9b1b9]">
+                    Итоговый вес всех файлов появится после нажатия «Перекодировать»
+                </p>
+            ) : (
+                <CompressionForecast
+                    count={count}
+                    resultSize={resultSize}
+                    savedSize={savedSize}
+                    savedPercent={savedPercent}
+                />
+            )}
         </section>
     );
 };
 
 interface PreviewPanelProps {
     imageUrl?: string;
+    onImageLoad?: ReactEventHandler<HTMLImageElement>;
     label: string;
     caption: string;
     size: string;
@@ -106,6 +134,7 @@ interface PreviewPanelProps {
 
 const PreviewPanel = ({
     imageUrl,
+    onImageLoad,
     label,
     caption,
     size,
@@ -151,7 +180,12 @@ const PreviewPanel = ({
             )}
         >
             {imageUrl ? (
-                <img className="absolute inset-0 size-full min-h-0 object-contain" src={imageUrl} alt={label} />
+                <img
+                    className="absolute inset-0 size-full min-h-0 object-contain"
+                    src={imageUrl}
+                    alt={label}
+                    onLoad={onImageLoad}
+                />
             ) : (
                 <div className="preview-image__pending flex flex-col items-center gap-3 text-[#a2a8b2] text-[14px]">
                     <Image size={28} strokeWidth={1.4} />

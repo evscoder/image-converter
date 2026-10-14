@@ -1,4 +1,5 @@
 import type { ImageFormat } from '../types';
+import { maxImageDimension } from './resizeLimits';
 
 export const formatBytes = (bytes: number, unit: 'KB' | 'МБ') => {
     const divisor = unit === 'KB' ? 1024 : 1024 * 1024;
@@ -10,20 +11,26 @@ export const processImage = (
     file: File,
     format: ImageFormat,
     quality: number,
-    maxWidth: number | null
+    maxWidth: number | null,
+    scale = 1
 ): Promise<{ blob: Blob; size: number }> => {
+    if (!Number.isFinite(scale) || scale <= 0 || scale > 4) {
+        return Promise.reject(new Error('Scale must be greater than 0 and at most 4'));
+    }
+
     const converterWindow = window as Window & typeof globalThis & { __TAURI_INTERNALS__?: unknown };
     if (converterWindow.__TAURI_INTERNALS__ && format !== 'jpeg') {
-        return processImageNatively(file, format, quality, maxWidth);
+        return processImageNatively(file, format, quality, maxWidth, scale);
     }
-    return processImageInCanvas(file, format, quality, maxWidth);
+    return processImageInCanvas(file, format, quality, maxWidth, scale);
 };
 
 const processImageNatively = async (
     file: File,
     format: ImageFormat,
     quality: number,
-    maxWidth: number | null
+    maxWidth: number | null,
+    scale: number
 ) => {
     const { invoke } = await import('@tauri-apps/api/core');
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -31,7 +38,8 @@ const processImageNatively = async (
         headers: {
             format,
             quality: String(Math.round(quality)),
-            'max-width': String(maxWidth ?? 0)
+            'max-width': String(maxWidth ?? 0),
+            scale: String(scale)
         }
     });
     const mime = format === 'jpeg' ? 'image/jpeg' : `image/${format}`;
@@ -43,20 +51,18 @@ const processImageInCanvas = (
     file: File,
     format: ImageFormat,
     quality: number,
-    maxWidth: number | null
+    maxWidth: number | null,
+    scale = 1
 ): Promise<{ blob: Blob; size: number }> => new Promise((resolve, reject) => {
     const image = new Image();
     const sourceUrl = URL.createObjectURL(file);
 
     image.onload = () => {
         URL.revokeObjectURL(sourceUrl);
-        let width = image.width;
-        let height = image.height;
-
-        if (maxWidth && width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-        }
+        const requestedFactor = maxWidth ? Math.min(1, maxWidth / image.width) : scale;
+        const factor = Math.min(requestedFactor, maxImageDimension / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * factor));
+        const height = Math.max(1, Math.round(image.height * factor));
 
         const canvas = document.createElement('canvas');
         canvas.width = width;
@@ -89,13 +95,15 @@ const processImageInCanvas = (
 
 export const createImageThumbnail = (
     file: File,
-    maxDimension = 400
+    maxDimension = 400,
+    onDimensions?: (width: number, height: number) => void
 ): Promise<Blob> => new Promise((resolve, reject) => {
     const image = new Image();
     const sourceUrl = URL.createObjectURL(file);
 
     image.onload = () => {
         URL.revokeObjectURL(sourceUrl);
+        onDimensions?.(image.naturalWidth, image.naturalHeight);
         const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(image.width * scale));

@@ -6,17 +6,26 @@ fn encode_image(
     format: String,
     quality: u8,
     max_width: Option<u32>,
+    scale: f64,
 ) -> Result<Vec<u8>, String> {
     let mut image = image::load_from_memory(&data)
         .map_err(|error| format!("Image decoding failed: {error}"))?;
 
-    if let Some(max_width) = max_width.filter(|width| *width > 0) {
-        if image.width() > max_width {
-            let height = ((image.height() as f64 * max_width as f64) / image.width() as f64)
-                .round()
-                .max(1.0) as u32;
-            image = image.resize_exact(max_width, height, FilterType::Lanczos3);
-        }
+    if !scale.is_finite() || scale <= 0.0 || scale > 4.0 {
+        return Err("Invalid scale".into());
+    }
+
+    let max_dimension = 8000.0;
+    let requested_scale = match max_width.filter(|width| *width > 0) {
+        Some(width) => (width.min(8000) as f64 / image.width() as f64).min(1.0),
+        None => scale,
+    };
+    let factor = requested_scale.min(max_dimension / image.width().max(image.height()) as f64);
+
+    if factor != 1.0 {
+        let width = (image.width() as f64 * factor).round().max(1.0) as u32;
+        let height = (image.height() as f64 * factor).round().max(1.0) as u32;
+        image = image.resize_exact(width, height, FilterType::Lanczos3);
     }
 
     match format.as_str() {
@@ -69,8 +78,21 @@ async fn process_image(request: tauri::ipc::Request<'_>) -> Result<tauri::ipc::R
         .and_then(|value| value.parse::<u32>().ok())
         .filter(|value| *value > 0);
 
+    let scale = request
+        .headers()
+        .get("scale")
+        .map(|value| {
+            value
+                .to_str()
+                .ok()
+                .and_then(|value| value.parse::<f64>().ok())
+                .ok_or("Invalid scale")
+        })
+        .transpose()?
+        .unwrap_or(1.0);
+
     let output = tauri::async_runtime::spawn_blocking(move || {
-        encode_image(data, format, quality, max_width)
+        encode_image(data, format, quality, max_width, scale)
     })
     .await
     .map_err(|error| format!("Image processing task failed: {error}"))??;
@@ -94,13 +116,51 @@ mod tests {
     use image::{ImageBuffer, Rgba};
 
     #[test]
+    fn native_resize_caps_oversized_sources_and_width_inputs() {
+        let source =
+            DynamicImage::ImageRgba8(ImageBuffer::from_pixel(10000, 1, Rgba([80, 140, 220, 255])));
+        let mut png = Cursor::new(Vec::new());
+        source.write_to(&mut png, ImageFormat::Png).unwrap();
+        let data = png.into_inner();
+
+        for (max_width, scale) in [(None, 3.0), (Some(8000000), 1.0)] {
+            let encoded = encode_image(data.clone(), "png".into(), 85, max_width, scale).unwrap();
+            let result = image::load_from_memory(&encoded).unwrap();
+            assert_eq!(result.width(), 8000);
+            assert_eq!(result.height(), 1);
+        }
+    }
+
+    #[test]
+    fn native_resize_supports_fractional_scale_and_width_limits() {
+        let source =
+            DynamicImage::ImageRgba8(ImageBuffer::from_pixel(80, 40, Rgba([80, 140, 220, 255])));
+        let mut png = Cursor::new(Vec::new());
+        source.write_to(&mut png, ImageFormat::Png).unwrap();
+        let data = png.into_inner();
+
+        for (scale, max_width, dimensions) in [
+            (0.5, None, (40, 20)),
+            (0.75, None, (60, 30)),
+            (2.0, None, (160, 80)),
+            (4.0, None, (320, 160)),
+            (2.0, Some(20), (20, 10)),
+            (2.0, Some(100), (80, 40)),
+        ] {
+            let encoded = encode_image(data.clone(), "png".into(), 85, max_width, scale).unwrap();
+            let result = image::load_from_memory(&encoded).unwrap();
+            assert_eq!((result.width(), result.height()), dimensions);
+        }
+    }
+
+    #[test]
     fn native_webp_encoder_returns_a_real_webp_file() {
         let source =
             DynamicImage::ImageRgba8(ImageBuffer::from_pixel(32, 32, Rgba([80, 140, 220, 255])));
         let mut png = Cursor::new(Vec::new());
         source.write_to(&mut png, ImageFormat::Png).unwrap();
 
-        let encoded = encode_image(png.into_inner(), "webp".into(), 85, None).unwrap();
+        let encoded = encode_image(png.into_inner(), "webp".into(), 85, None, 1.0).unwrap();
 
         assert_eq!(&encoded[0..4], b"RIFF");
         assert_eq!(&encoded[8..12], b"WEBP");

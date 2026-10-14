@@ -56,7 +56,7 @@ for (const format of ['WEBP', 'JPEG', 'PNG'] as const) {
         await uploadImages(page);
         await page.getByLabel('Шаблон имени').fill('export_$nn');
         await page.getByLabel('Начать с').fill('7');
-        await page.getByLabel('Макс. размер (px)').fill('20');
+        await page.getByLabel('Макс. ширина (px)').fill('20');
         await page.getByRole('button').filter({ hasText: new RegExp(`^${format}$`) }).click();
         const extension = format === 'JPEG' ? 'jpg' : format.toLowerCase();
         const namePreview = page.getByRole('list', { name: 'Пример имён файлов' });
@@ -160,4 +160,85 @@ test('duplicate names are explained in the preview and preserve every file in th
     const download = await pendingDownload;
     const archive = await readArchive(download);
     expect(Object.keys(archive.files).sort()).toEqual(['photo (2).webp', 'photo.webp']);
+});
+
+
+test('scale supports presets, decimal input, keyboard selection and exclusive width', async ({ page }) => {
+    await uploadImages(page);
+    const scale = page.getByRole('combobox', { name: 'Масштаб', exact: true });
+    const width = page.getByLabel('Макс. ширина (px)');
+    await expect(scale).toHaveValue('1');
+    await width.fill('100');
+    await page.getByRole('button', { name: 'Варианты: Масштаб' }).click();
+    await page.getByRole('option', { name: '2×', exact: true }).click();
+    await expect(scale).toHaveValue('2');
+    await expect(width).toHaveValue('');
+    await width.fill('200');
+    await expect(scale).toHaveValue('1');
+    await scale.fill('0,75');
+    await scale.press('Enter');
+    await expect(scale).toHaveValue('0.75');
+    await expect(width).toHaveValue('');
+    await scale.press('ArrowDown');
+    await scale.press('ArrowDown');
+    await scale.press('Enter');
+    await expect(scale).toHaveValue('1');
+    for (const invalid of ['5', '4.01', '10']) {
+        await scale.fill(invalid);
+        await scale.press('Enter');
+        await expect(scale).toHaveValue('4');
+        await expect(scale).toHaveAttribute('aria-invalid', 'false');
+    }
+    await width.fill('8000000');
+    await expect(width).toHaveValue('8000');
+    await expect(scale).toHaveValue('1');
+    await scale.fill('0');
+    await scale.press('Enter');
+    await expect(scale).toHaveAttribute('aria-invalid', 'true');
+    await scale.press('Escape');
+    await expect(scale).toHaveValue('1');
+});
+
+for (const scale of ['0.5', '2', '4']) {
+    test(`exports images at ${scale} times their original dimensions`, async ({ page }) => {
+        await uploadImages(page);
+        await page.getByRole('button', { name: 'PNG', exact: true }).click();
+        const field = page.getByRole('combobox', { name: 'Масштаб', exact: true });
+        await field.fill(scale);
+        await field.press('Enter');
+        await page.getByRole('button', { name: 'Перекодировать', exact: true }).click();
+        const downloadPromise = page.waitForEvent('download');
+        await page.getByRole('button', { name: 'Скачать ZIP' }).click();
+        const archive = await readArchive(await downloadPromise);
+        const entry = Object.values(archive.files).find(file => !file.dir);
+        if (!entry) throw new Error('Empty archive');
+        const png = await entry.async('nodebuffer');
+        expect(png.readUInt32BE(16)).toBe(80 * Number(scale));
+        expect(png.readUInt32BE(20)).toBe(40 * Number(scale));
+    });
+}
+
+test('large images lower the scale limit and clamp typed values immediately', async ({ page }) => {
+    await uploadImages(page);
+    const scale = page.getByRole('combobox', { name: 'Масштаб', exact: true });
+    await scale.fill('4');
+    await scale.press('Enter');
+    const base64 = await page.evaluate(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 10;
+        canvas.height = 5000;
+        return canvas.toDataURL('image/png').split(',')[1];
+    });
+    await page.getByLabel('Выбрать изображения', { exact: true }).setInputFiles({
+        name: 'portrait.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from(base64, 'base64')
+    });
+    await expect(scale).toHaveValue('1.6');
+    await scale.fill('3');
+    await expect(scale).toHaveValue('1.6');
+    await expect(scale).toHaveAttribute('aria-invalid', 'false');
+    await page.getByRole('button', { name: 'Варианты: Масштаб' }).click();
+    await expect(page.getByRole('option', { name: '4×', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('option', { name: '1.6×', exact: true })).toBeVisible();
 });

@@ -54,7 +54,7 @@ export const Controls = ({
                 <h2 className="export-settings__title mb-5 text-[14px] font-medium text-[#aaa]">
                     Параметры обработки
                 </h2>
-                <ConversionFields settings={settings} onChange={onChange} />
+                <ConversionFields items={items} settings={settings} onChange={onChange} />
                 <FilenameSettings items={items} settings={settings} onChange={onChange} />
             </fieldset>
             <OutputFolder

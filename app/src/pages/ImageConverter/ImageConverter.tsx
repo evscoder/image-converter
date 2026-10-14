@@ -64,6 +64,7 @@ const ImageConverter = () => {
                                 first={converter.selectedItem}
                                 preview={converter.preview}
                                 forecast={converter.forecast}
+                                forecastDeferred={Number(converter.settings.scale) > 1}
                                 format={converter.settings.format}
                                 totalBytes={converter.totalBytes}
                                 count={converter.items.length}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import JSZip from 'jszip';
+import { clampWidth, getMaximumScale } from '../lib/resizeLimits';
 import { buildOutputFilenames, defaultNameTemplate } from '../lib/filenames';
 import { createImageThumbnail, mapWithConcurrency, processImage } from '../lib/imageProcessing';
 import type { CompressionForecast, CompressionPreview, ConverterSettings, ImageItem, ProcessedImage } from '../types';
@@ -9,7 +10,8 @@ const initialSettings: ConverterSettings = {
     startNumber: '1',
     format: 'webp',
     quality: 85,
-    maxWidth: ''
+    maxWidth: '',
+    scale: '1'
 };
 const processingConcurrency = 2;
 const forecastConcurrency = 1;
@@ -21,7 +23,7 @@ interface ImageProcessingResult {
     size: number;
 }
 
-type EncodingSettings = Pick<ConverterSettings, 'format' | 'quality' | 'maxWidth'>;
+type EncodingSettings = Pick<ConverterSettings, 'format' | 'quality' | 'maxWidth' | 'scale'>;
 
 interface BrowserWritableFile {
     write: (data: Blob) => Promise<void>;
@@ -56,11 +58,20 @@ export const useImageConverter = () => {
     itemsRef.current = items;
     const totalBytes = useMemo(() => items.reduce((sum, item) => sum + item.file.size, 0), [items]);
     const fileSetKey = useMemo(() => items.map(item => item.id).join('|'), [items]);
+    const maximumScale = useMemo(() => getMaximumScale(items), [items]);
+
+    useEffect(() => {
+        setSettings(current => Number(current.scale) > maximumScale && !current.maxWidth
+            ? { ...current, scale: String(maximumScale) }
+            : current);
+    }, [maximumScale]);
+
     const encodingSettings = useMemo<EncodingSettings>(() => ({
         format: settings.format,
         quality: settings.quality,
-        maxWidth: settings.maxWidth
-    }), [settings.format, settings.quality, settings.maxWidth]);
+        maxWidth: settings.maxWidth,
+        scale: settings.scale
+    }), [settings.format, settings.quality, settings.maxWidth, settings.scale]);
     const selectedItem = useMemo(
         () => items.find(item => item.id === selectedId) ?? items[0],
         [items, selectedId]
@@ -69,11 +80,12 @@ export const useImageConverter = () => {
 
     const getProcessedImage = useCallback((item: ImageItem, currentSettings: EncodingSettings) => {
         const maxWidth = Number(currentSettings.maxWidth) || null;
-        const key = `${item.id}:${currentSettings.format}:${currentSettings.quality}:${maxWidth ?? 'original'}`;
+        const scale = Math.min(Number(currentSettings.scale) || 1, getMaximumScale([item]));
+        const key = `${item.id}:${currentSettings.format}:${currentSettings.quality}:${maxWidth ?? 'original'}:${scale}`;
         const cached = processingCache.current.get(key);
         if (cached) return cached;
 
-        const pending = processImage(item.file, currentSettings.format, currentSettings.quality, maxWidth)
+        const pending = processImage(item.file, currentSettings.format, currentSettings.quality, maxWidth, scale)
             .catch(error => {
                 processingCache.current.delete(key);
                 throw error;
@@ -87,8 +99,13 @@ export const useImageConverter = () => {
         const next = await mapWithConcurrency(files, processingConcurrency, async file => {
             const previewUrl = URL.createObjectURL(file);
             let thumbnailUrl = previewUrl;
+            let width: number | undefined;
+            let height: number | undefined;
             try {
-                thumbnailUrl = URL.createObjectURL(await createImageThumbnail(file));
+                thumbnailUrl = URL.createObjectURL(await createImageThumbnail(file, 400, (imageWidth, imageHeight) => {
+                    width = imageWidth;
+                    height = imageHeight;
+                }));
             } catch { /* The original remains available for formats unsupported by canvas. */ }
 
             return {
@@ -96,6 +113,8 @@ export const useImageConverter = () => {
                 file,
                 previewUrl,
                 thumbnailUrl,
+                width,
+                height,
                 status: 'idle' as const
             };
         });
@@ -127,7 +146,7 @@ export const useImageConverter = () => {
 
     useEffect(() => {
         const sourceItems = itemsRef.current;
-        if (!sourceItems.length) {
+        if (!sourceItems.length || Number(encodingSettings.scale) > 1) {
             setForecast(null);
             return;
         }
@@ -139,7 +158,10 @@ export const useImageConverter = () => {
                 const results = await mapWithConcurrency(
                     sourceItems,
                     forecastConcurrency,
-                    item => getProcessedImage(item, encodingSettings)
+                    item => {
+                        if (cancelled) throw new Error('Forecast cancelled');
+                        return getProcessedImage(item, encodingSettings);
+                    }
                 );
                 if (cancelled) return;
                 const resultTotal = results.reduce((sum, entry) => sum + entry.size, 0);
@@ -194,13 +216,22 @@ export const useImageConverter = () => {
     const updateSettings = useCallback((next: Partial<ConverterSettings>) => {
         setSettings(current => {
             const updated = { ...current, ...next };
-            if (updated.quality !== current.quality || updated.maxWidth !== current.maxWidth) {
+            if (next.maxWidth !== undefined) updated.maxWidth = clampWidth(next.maxWidth);
+            if (next.maxWidth !== undefined && updated.maxWidth !== '') updated.scale = '1';
+            if (next.scale !== undefined) {
+                updated.scale = String(Math.min(Number(next.scale) || 1, maximumScale));
+            }
+            if (next.scale !== undefined && Number(next.scale) !== 1) updated.maxWidth = '';
+
+            if (updated.quality !== current.quality
+                || updated.maxWidth !== current.maxWidth
+                || updated.scale !== current.scale) {
                 processingCache.current.clear();
             }
             return updated;
         });
         setProcessed([]);
-    }, []);
+    }, [maximumScale]);
 
     const selectFolder = async () => {
         const converterWindow = window as ConverterWindow;
@@ -264,6 +295,10 @@ export const useImageConverter = () => {
         });
         const results = converted.filter((file): file is ProcessedImage => file !== null);
         setProcessed(results);
+        if (results.length === items.length) {
+            const resultSize = results.reduce((sum, file) => sum + file.newSize, 0);
+            setForecast({ resultSize, savedSize: totalBytes - resultSize });
+        }
 
         if (browserDirectory) {
             let saved = 0;
